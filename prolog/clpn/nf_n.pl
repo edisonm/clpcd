@@ -313,7 +313,7 @@ submit_eq_c1([],v(K,[NL^P]),I) :-
 	nonvar(NL),
 	(   compare_d(clpn, =, P, 1),
 	    Y is -I/K
-	;   real_near(P -1),
+	;   compare_d(clpn, =, P, -1),
 	    Y is -K/I
 	),
 	nl_invertible(NL,X,Y,Inv),

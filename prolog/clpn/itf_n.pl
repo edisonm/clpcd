@@ -66,9 +66,9 @@
 :- use_module(spec_n).
 
 :- multifile
-        itf:do_checks/9.
+        clpcd_itf:do_checks/9.
 
-do_checks(clpn,Y,Ty,St,Li,Or,Cl,No,Later) :-
+clpcd_itf:do_checks(clpn,Y,Ty,St,Li,Or,Cl,No,Later) :-
 	do_checks(Y,Ty,St,Li,Or,Cl,No,Later).
 
 do_checks(Y,Ty,St,Li,Or,Cl,No,Later) :-
@@ -94,9 +94,9 @@ numbers_only(Y) :-
 
 verify_nonzero(nonzero,Y) :-
 	(   var(Y)
-	->  (   get_attr(Y,itf,Att)
+	->  (   get_attr(Y,clpcd_itf,Att)
 	    ->  setarg(8,Att,nonzero)
-	    ;   put_attr(Y,itf,t(clpn,n,n,n,n,n,n,nonzero,n,n,n))
+	    ;   put_attr(Y,clpcd_itf,t(clpn,n,n,n,n,n,n,nonzero,n,n,n))
 	    )
 	;   Y =\= 0
 	).

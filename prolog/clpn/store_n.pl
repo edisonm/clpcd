@@ -65,9 +65,9 @@
 normalize_scalar(S,[S,0]).
 
 :- multifile
-        project:renormalize/3.
+        clpcd_project:renormalize/3.
 
-project:renormalize(clpn,Lin,New) :- renormalize(Lin,New).
+clpcd_project:renormalize(clpn,Lin,New) :- renormalize(Lin,New).
 
 % renormalize(List,Lin)
 %
@@ -112,7 +112,7 @@ renormalize_log(N,L0,L2,Lin) :-
 renormalize_log_one(X,Term,Res) :-
 	var(X),
 	Term = l(X*K,_),
-	get_attr(X,itf,Att),
+	get_attr(X,clpcd_itf,Att),
 	arg(5,Att,order(OrdX)), % Order might have changed
 	Res = [0,0,l(X*K,OrdX)].
 renormalize_log_one(X,Term,Res) :-
@@ -361,9 +361,9 @@ isolate(OrdN,Lin,Lin1) :-
 	mult_linear_factor(Lin0,K,Lin1).
 
 :- multifile
-        project:indep/3.
+        clpcd_project:indep/3.
 
-project:indep(clpn,Lin,OrdV) :- indep(Lin,OrdV).
+clpcd_project:indep(clpn,Lin,OrdV) :- indep(Lin,OrdV).
 
 % indep(Lin,OrdX)
 %
@@ -383,8 +383,7 @@ indep(Lin,OrdX) :-
 
 nf2sum([],I,I).
 nf2sum([X|Xs],I,Sum) :-
-	(   % I =:= 0.0
-	    compare_d(clpn, =, I, 0)
+	(   I =:= 0
 	->  X = l(Var*K,_),
  	    (   % K =:= 1.0
                 compare_d(clpn, =, K, 1)

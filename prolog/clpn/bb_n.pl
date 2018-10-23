@@ -64,6 +64,7 @@
 	    wait_linear/3
 	]).
 :- use_module(spec_n).
+:- use_module(library(near_utils)).
 
 % bb_inf(Ints,Term,Inf)
 %

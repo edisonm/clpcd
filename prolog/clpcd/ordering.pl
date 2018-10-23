@@ -38,7 +38,7 @@
 */
 
 
-:- module(ordering,
+:- module(clpcd_ordering,
 	[
 	    combine/3,
 	    ordering/1,
@@ -204,4 +204,4 @@ group([L-Ll|Ls],K,Kl,Res) :-
 :- multifile
 	sandbox:safe_primitive/1.
 
-sandbox:safe_primitive(ordering:ordering(_)).
+sandbox:safe_primitive(clpcd_ordering:ordering(_)).

@@ -41,7 +41,7 @@
 % attribute = t(CLP,type(_),strictness(_),lin(_),order(_),class(_),forward(_),
 %		nonzero,target,keep_indep,keep)
 
-:- module(itf,
+:- module(clpcd_itf,
 	[
 	    dump_linear/3,
 	    dump_nonzero/3,
@@ -49,19 +49,19 @@
 	]).
 
 :- multifile
-        dump_v/5,
-        dump_nz/4.
+        dump_v//5,
+        dump_nz//4.
 
 clp_type(Var,Type) :-
-	(   get_attr(Var,itf,Att)
+	(   get_attr(Var,clpcd_itf,Att)
 	->  arg(1,Att,Type)
-	;   get_attr(Var,geler,Att)
+	;   get_attr(Var,clpcd_geler,Att)
 	->  arg(1,Att,Type)
 	).
 
 dump_linear(V) -->
 	{
-	    get_attr(V,itf,Att),
+	    get_attr(V,clpcd_itf,Att),
 	    arg(1,Att,CLP),
 	    arg(2,Att,type(Type)),
 	    arg(4,Att,lin(Lin)),
@@ -87,7 +87,7 @@ dump_linear(_) --> [].
 
 dump_nonzero(V) -->
 	{
-	    get_attr(V,itf,Att),
+	    get_attr(V,clpcd_itf,Att),
 	    arg(1,Att,CLP),
 	    arg(4,Att,lin(Lin)),
 	    arg(8,Att,nonzero),
@@ -99,17 +99,17 @@ dump_nonzero(_) --> [].
 
 attr_unify_hook(t(CLP,n,n,n,n,n,n,n,_,_,_),Y) :-
 	!,
-	(   get_attr(Y,itf,AttY),
+	(   get_attr(Y,clpcd_itf,AttY),
 	    \+ arg(1,AttY,CLP)
-	->  throw(error(permission_error('mix CLP(Q) variables with',
-		'CLP(R) variables:',Y),context(_)))
+	->  throw(error(permission_error('mix CLP(CD) variables with',
+		'CLP(CD) variables of other subdomain:',Y),context(_)))
 	;   true
 	).
 attr_unify_hook(t(CLP,Ty,St,Li,Or,Cl,_,No,_,_,_),Y) :-
-	(   get_attr(Y,itf,AttY),
+	(   get_attr(Y,clpcd_itf,AttY),
 	    \+ arg(1,AttY,CLP)
-	->  throw(error(permission_error('mix CLP(Q) variables with',
-		'CLP(R) variables:',Y),context(_)))
+	->  throw(error(permission_error('mix CLP(CD) variables with',
+		'CLP(CD) variables of other subdomain:',Y),context(_)))
 	;   true
 	),
 	do_checks(CLP,Y,Ty,St,Li,Or,Cl,No,Later),
@@ -124,4 +124,4 @@ attr_unify_hook(t(CLP,Ty,St,Li,Or,Cl,_,No,_,_,_),Y) :-
 :- multifile
 	sandbox:safe_primitive/1.
 
-sandbox:safe_primitive(itf:clp_type(_,_)).
+sandbox:safe_primitive(clpcd_itf:clp_type(_,_)).

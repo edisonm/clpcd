@@ -38,7 +38,7 @@
 */
 
 
-:- module(dump,
+:- module(clpcd_dump,
 	[
 	    dump/3,
 	    projecting_assert/1
@@ -98,7 +98,7 @@ dump(Target,NewVars,Constraints) :-
 	    copy(Gs,Copy,D1,_),			% strip constraints
 	    nb_setval(clpcd_dump,NewVars/Copy),
 	    fail				% undo projection
-	;   catch(nb_getval(clpcd_dump,NewVars/Constraints),_,fail),
+	;   nb_current(clpcd_dump, NewVars/Constraints),
 	    nb_delete(clpcd_dump)
 	).
 
@@ -128,10 +128,10 @@ copy_term_clpcd(Term,Copy,Constraints) :-
 	    all_attribute_goals(Again,Gs,Nonlin),
 	    empty_assoc(D0),
 	    copy(Term/Gs,TmpCopy,D0,_),	  % strip constraints
-	    nb_setval(clpcd_dump,TmpCopy),
+	    nb_setval(clpcd_copy_term,TmpCopy),
 	    fail
-	;   catch(nb_getval(clpcd_dump,Copy/Constraints),_,fail),
-	    nb_delete(clpcd_dump)
+	;   nb_current(clpcd_copy_term,Copy/Constraints),
+	    nb_delete(clpcd_copy_term)
 	).
 
 % l2c(Lst,Conj)
@@ -179,7 +179,7 @@ related_linear_vars(Vs,All) :-
 
 related_linear_sys([],S0,L0) :- assoc_to_list(S0,L0).
 related_linear_sys([V|Vs],S0,S2) :-
-	(   get_attr(V,itf,Att),
+	(   get_attr(V,clpcd_itf,Att),
 	    arg(6,Att,class(C))
 	->  put_assoc(C,S0,C,S1)
 	;   S1 = S0
@@ -306,7 +306,7 @@ copy(N,T,C,D0,D2) :-
 %	copy_term/3, which also determines  the   toplevel  printing  of
 %	residual constraints.
 
-itf:attribute_goals(V) -->
+clpcd_itf:attribute_goals(V) -->
 	(   { term_attvars(V, Vs),
 	      dump(Vs, NVs, List),
 	      NVs = Vs,
@@ -316,13 +316,13 @@ itf:attribute_goals(V) -->
 	;   []
 	).
 
-class:attribute_goals(_) --> [].
+clpcd_class:attribute_goals(_) --> [].
 
-geler:attribute_goals(V) --> itf:attribute_goals(V).
+clpcd_geler:attribute_goals(V) --> clpcd_itf:attribute_goals(V).
 
 del_itf([]).
 del_itf([H|T]) :-
-	del_attr(H, itf),
+	del_attr(H, clpcd_itf),
 	del_itf(T).
 
 
@@ -337,4 +337,4 @@ list_to_conj([H|T0], (H,T)) :-
 :- multifile
 	sandbox:safe_primitive/1.
 
-sandbox:safe_primitive(dump:dump(_,_,_)).
+sandbox:safe_primitive(clpcd_dump:dump(_,_,_)).

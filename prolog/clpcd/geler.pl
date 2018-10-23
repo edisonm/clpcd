@@ -35,7 +35,7 @@
     the GNU General Public License.
 */
 
-:- module(geler,
+:- module(clpcd_geler,
 	[
 	    geler/3,
 	    project_nonlin/3,
@@ -74,26 +74,28 @@ nonexhausted((A,B)) -->
 attr_unify_hook(g(CLP,goals(Gx),_),Y) :-
 	!,
 	(   var(Y),
-	    (   get_attr(Y,geler,g(A,B,C))
-	    ->  ignore((CLP \== A,throw(error(permission_error(
-		    'apply CLP(Q) constraints on','CLP(R) variable',Y),
+	    (   get_attr(Y,clpcd_geler,g(A,B,C))
+	    ->  ignore((CLP \== A,
+                        throw(error(permission_error(
+		                        'apply CLPCD constraints on',
+                                        'variable of a different subdomain',Y),
 		    context(_))))),
 		(   % possibly mutual goals. these need to be run.
 		    % other goals are run as well to remove redundant goals.
 		    B = goals(Gy)
 		->  Later = [Gx,Gy],
 		    (   C = n
-		    ->  del_attr(Y,geler)
-		    ;   put_attr(Y,geler,g(CLP,n,C))
+		    ->  del_attr(Y,clpcd_geler)
+		    ;   put_attr(Y,clpcd_geler,g(CLP,n,C))
 		    )
 		;   % no goals in Y, so no mutual goals of X and Y, store
 		    % goals of X in Y
 		    % no need to run any goal.
 		    Later = [],
-		    put_attr(Y,geler,g(CLP,goals(Gx),C))
+		    put_attr(Y,clpcd_geler,g(CLP,goals(Gx),C))
 		)
 	    ;	Later = [],
-		put_attr(Y,geler,g(CLP,goals(Gx),n))
+		put_attr(Y,clpcd_geler,g(CLP,goals(Gx),n))
 	    )
 	;   nonvar(Y),
 	    Later = [Gx]
@@ -113,7 +115,7 @@ project_nonlin(_,Cvas,Reachable) :-
 
 collect_nonlin([]) --> [].
 collect_nonlin([X|Xs]) -->
-	(   { get_attr(X,geler,g(_,goals(Gx),_)) }
+	(   { get_attr(X,clpcd_geler,g(_,goals(Gx),_)) }
 	->  trans(Gx),
 	    collect_nonlin(Xs)
 	;   collect_nonlin(Xs)
@@ -178,15 +180,15 @@ geler(CLP,Vars,Goal) :-
 attach([],_,_).
 attach([V|Vs],CLP,Goal) :-
 	var(V),
-	(   get_attr(V,geler,g(A,B,C))
+	(   get_attr(V,clpcd_geler,g(A,B,C))
 	->  (   CLP \== A
 	    ->  throw(error(permission_error('apply CLP(Q) constraints on',
 		    'CLP(R) variable',V),context(_)))
 	    ;   (   B = goals(Goals)
-	        ->  put_attr(V,geler,g(A,goals((Goal,Goals)),C))
-	        ;   put_attr(V,geler,g(A,goals(Goal),C))
+	        ->  put_attr(V,clpcd_geler,g(A,goals((Goal,Goals)),C))
+	        ;   put_attr(V,clpcd_geler,g(A,goals(Goal),C))
 	        )
 	    )
-	;   put_attr(V,geler,g(CLP,goals(Goal),n))
+	;   put_attr(V,clpcd_geler,g(CLP,goals(Goal),n))
 	),
 	attach(Vs,CLP,Goal).

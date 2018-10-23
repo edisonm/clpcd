@@ -4,6 +4,7 @@
 :- use_module(library(near_utils)).
 
 :- multifile
+        clpcd_highlight:clpcd_module/1,
         prolog_colour:syntax_message//1.
 
 % Predicates specific to a domain
