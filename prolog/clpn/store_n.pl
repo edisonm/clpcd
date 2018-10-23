@@ -38,7 +38,7 @@
     the GNU General Public License.
 */
 
-:- module(store_r,
+:- module(store_n,
 	[
 	    add_linear_11/3,
 	    add_linear_f1/4,
@@ -56,11 +56,18 @@
 	    renormalize/2	
 	]).
 
+:- use_module(spec_n).
+
 % normalize_scalar(S,[N,Z])
 %
 % Transforms a scalar S into a linear expression [S,0]
 
-normalize_scalar(S,[S,0.0]).
+normalize_scalar(S,[S,0]).
+
+:- multifile
+        project:renormalize/3.
+
+project:renormalize(clpn,Lin,New) :- renormalize(Lin,New).
 
 % renormalize(List,Lin)
 %
@@ -107,7 +114,7 @@ renormalize_log_one(X,Term,Res) :-
 	Term = l(X*K,_),
 	get_attr(X,itf,Att),
 	arg(5,Att,order(OrdX)), % Order might have changed
-	Res = [0.0,0.0,l(X*K,OrdX)].
+	Res = [0,0,l(X*K,OrdX)].
 renormalize_log_one(X,Term,Res) :-
 	nonvar(X),
 	Term = l(X*K,_),
@@ -149,8 +156,7 @@ add_linear_ffh([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs,Ka,Kb) :-
 	(   Rel = (=)
 	->  Kz is Kx*Ka+Ky*Kb,
 	    (   % Kz =:= 0
-		Kz =< 1.0e-10,
-		Kz >= -1.0e-10
+                compare_d(clpn, =, Kx*Ka, -Ky*Kb)
 	    ->  add_linear_ffh(Xs,Ka,Ys,Kb,Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
 		add_linear_ffh(Xs,Ka,Ys,Kb,Ztail)
@@ -195,8 +201,7 @@ add_linear_f1h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs,Ka) :-
 	(   Rel = (=)
 	->  Kz is Kx*Ka+Ky,
 	    (   % Kz =:= 0.0
-		Kz =< 1.0e-10,
-		Kz >= -1.0e-10
+                compare_d(clpn, =, Kx*Ka, -Ky)
 	    ->  add_linear_f1h(Xs,Ka,Ys,Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
 		add_linear_f1h(Xs,Ka,Ys,Ztail)
@@ -240,8 +245,7 @@ add_linear_11h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs) :-
 	(   Rel = (=)
 	->  Kz is Kx+Ky,
 	    (   % Kz =:= 0.0
-		Kz =< 1.0e-10,
-		Kz >= -1.0e-10
+		compare_d(clpn, =, Kx, -Ky)
 	    ->  add_linear_11h(Xs,Ys,Zs)
 	    ;   Zs = [l(X*Kz,OrdX)|Ztail],
 		add_linear_11h(Xs,Ys,Ztail)
@@ -260,9 +264,7 @@ add_linear_11h([l(Y*Ky,OrdY)|Ys],X,Kx,OrdX,Xs,Zs) :-
 % expression Lin by scalar K
 
 mult_linear_factor(Lin,K,Mult) :-
-	TestK is K - 1.0,	% K =:= 1
-	TestK =< 1.0e-10,
-	TestK >= -1.0e-10,	% avoid copy
+        compare_d(clpn, =, K, 1),
 	!,
 	Mult = Lin.
 mult_linear_factor(Lin,K,Res) :-
@@ -355,8 +357,13 @@ nf_rhs_x(Lin,OrdX,Rhs,K) :-
 
 isolate(OrdN,Lin,Lin1) :-
 	delete_factor(OrdN,Lin,Lin0,Coeff),
-	K is -1.0/Coeff,
+	K is -1/Coeff,
 	mult_linear_factor(Lin0,K,Lin1).
+
+:- multifile
+        project:indep/3.
+
+project:indep(clpn,Lin,OrdV) :- indep(Lin,OrdV).
 
 % indep(Lin,OrdX)
 %
@@ -366,12 +373,8 @@ indep(Lin,OrdX) :-
 	Lin = [I,_|[l(_*K,OrdY)]],
 	OrdX == OrdY,
 	% K =:= 1.0
-	TestK is K - 1.0,
-	TestK =< 1.0e-10,
-	TestK >= -1.0e-10,
-	% I =:= 0
-	I =< 1.0e-10,
-	I >= -1.0e-10.
+        compare_d(clpn, =, K, 1),
+	compare_d(clpn, =, I, 0).
 
 % nf2sum(Lin,Sofar,Term)
 %
@@ -381,18 +384,13 @@ indep(Lin,OrdX) :-
 nf2sum([],I,I).
 nf2sum([X|Xs],I,Sum) :-
 	(   % I =:= 0.0
-	    I =< 1.0e-10,
-	    I >= -1.0e-10
+	    compare_d(clpn, =, I, 0)
 	->  X = l(Var*K,_),
  	    (   % K =:= 1.0
-		TestK is K - 1.0,
-		TestK =< 1.0e-10,
-		TestK >= -1.0e-10
+                compare_d(clpn, =, K, 1)
 	    ->  hom2sum(Xs,Var,Sum)
 	    ;   % K =:= -1.0
-		TestK is K + 1.0,
-		TestK =< 1.0e-10,
-		TestK >= -1.0e-10
+                compare_d(clpn, =, K, -1)
 	    ->  hom2sum(Xs,-Var,Sum)
 	    ;	hom2sum(Xs,K*Var,Sum)
 	    )
@@ -409,17 +407,13 @@ nf2sum([X|Xs],I,Sum) :-
 hom2sum([],Term,Term).
 hom2sum([l(Var*K,_)|Cs],Sofar,Term) :-
 	(   % K =:= 1.0
-	    TestK is K - 1.0,
-	    TestK =< 1.0e-10,
-	    TestK >= -1.0e-10
+            compare_d(clpn, =, K, 1)
 	->  Next = Sofar + Var
 	;   % K =:= -1.0
-	    TestK is K + 1.0,
-	    TestK =< 1.0e-10,
-	    TestK >= -1.0e-10
+            compare_d(clpn, =, K, -1)
 	->  Next = Sofar - Var
 	;   % K < 0.0
-	    K < -1.0e-10
+	    compare_d(clpn, <, K, 0)
 	->  Ka is -K,
 	    Next = Sofar - Ka*Var
 	;   Next = Sofar + K*Var

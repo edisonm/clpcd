@@ -68,6 +68,9 @@
 	    arrangement/2
 	]).
 
+:- multifile
+        fm_elim/4.
+
 %
 % interface predicate
 %
@@ -91,9 +94,6 @@ project_attributes(TargetVars,Cvas) :-
 	    )
 	;   true
 	).
-
-fm_elim(clpq,Avs,Tvs,Pivots) :- fourmotz_q:fm_elim(Avs,Tvs,Pivots).
-fm_elim(clpr,Avs,Tvs,Pivots) :- fourmotz_r:fm_elim(Avs,Tvs,Pivots).
 
 get_clp([],_).
 get_clp([H|T],CLP) :-
@@ -202,14 +202,10 @@ drop_dep_one(V) :-
 	setarg(6,Att,n).
 drop_dep_one(_).
 
-indep(clpq,Lin,OrdV) :- store_q:indep(Lin,OrdV).
-indep(clpr,Lin,OrdV) :- store_r:indep(Lin,OrdV).
-
-pivot(clpq,T,Class,Ord,Type,IndAct) :- bv_q:pivot(T,Class,Ord,Type,IndAct).
-pivot(clpr,T,Class,Ord,Type,IndAct) :- bv_r:pivot(T,Class,Ord,Type,IndAct).
-
-renormalize(clpq,Lin,New) :- store_q:renormalize(Lin,New).
-renormalize(clpr,Lin,New) :- store_r:renormalize(Lin,New).
+:- multifile
+        indep/3,
+        pivot/6,
+        renormalize/3.
 
 % drop_lin_atts(Vs)
 %

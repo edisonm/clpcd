@@ -96,21 +96,19 @@ dump(Target,NewVars,Constraints) :-
 	    empty_assoc(D0),
 	    mapping(Target,NewVars,D0,D1),	% late (AVL suffers from put_atts)
 	    copy(Gs,Copy,D1,_),			% strip constraints
-	    nb_setval(clpqr_dump,NewVars/Copy),
+	    nb_setval(clpcd_dump,NewVars/Copy),
 	    fail				% undo projection
-	;   catch(nb_getval(clpqr_dump,NewVars/Constraints),_,fail),
-	    nb_delete(clpqr_dump)
+	;   catch(nb_getval(clpcd_dump,NewVars/Constraints),_,fail),
+	    nb_delete(clpcd_dump)
 	).
 
 :- meta_predicate projecting_assert(:).
 
 projecting_assert(QClause) :-
 	strip_module(QClause, Module, Clause),  % JW: SWI-Prolog not always qualifies the term!
-	copy_term_clpq(Clause,Copy,Constraints),
+	copy_term_clpcd(Clause,Copy,Constraints),
 	l2c(Constraints,Conj),			% fails for []
-	(   Sm = clpq
-	;   Sm = clpr
-	),			% proper module for {}/1
+        clpcd_highlight:clpcd_module(Sm),
 	!,
 	(   Copy = (H:-B)
 	->  % former rule
@@ -121,7 +119,7 @@ projecting_assert(QClause) :-
 projecting_assert(Clause) :-	% not our business
 	assert(Clause).
 
-copy_term_clpq(Term,Copy,Constraints) :-
+copy_term_clpcd(Term,Copy,Constraints) :-
 	(   term_variables(Term,Target),	% get all variables in Term
 	    related_linear_vars(Target,All),	% get all variables of the classes of the variables in Term
 	    nonlin_crux(All,Nonlin),		% get a list of all the nonlinear goals of these variables
@@ -130,10 +128,10 @@ copy_term_clpq(Term,Copy,Constraints) :-
 	    all_attribute_goals(Again,Gs,Nonlin),
 	    empty_assoc(D0),
 	    copy(Term/Gs,TmpCopy,D0,_),	  % strip constraints
-	    nb_setval(clpqr_dump,TmpCopy),
+	    nb_setval(clpcd_dump,TmpCopy),
 	    fail
-	;   catch(nb_getval(clpqr_dump,Copy/Constraints),_,fail),
-	    nb_delete(clpqr_copy_term)
+	;   catch(nb_getval(clpcd_dump,Copy/Constraints),_,fail),
+	    nb_delete(clpcd_dump)
 	).
 
 % l2c(Lst,Conj)

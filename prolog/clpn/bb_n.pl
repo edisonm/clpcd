@@ -38,13 +38,13 @@
     the GNU General Public License.
 */
 
-:- module(bb_r,
+:- module(bb_n,
 	[
 	    bb_inf/3,
-	    bb_inf/5,
+	    bb_inf/4,
 	    vertex_value/2
 	]).
-:- use_module(bv_r,
+:- use_module(bv_n,
 	[
 	    deref/2,
 	    deref_var/2,
@@ -54,7 +54,7 @@
 	    sup/2,
 	    var_with_def_assign/2
 	]).
-:- use_module(nf_r,
+:- use_module(nf_n,
 	[
 	    {}/1,
 	    entailed/1,
@@ -63,6 +63,7 @@
 	    repair/2,
 	    wait_linear/3
 	]).
+:- use_module(spec_n).
 
 % bb_inf(Ints,Term,Inf)
 %
@@ -70,48 +71,44 @@
 % The infimum is stored in Inf.
 
 bb_inf(Is,Term,Inf) :-
-	bb_inf(Is,Term,Inf,_,0.001).
+	bb_inf(Is,Term,Inf,_).
 
-bb_inf(Is,Term,Inf,Vertex,Eps) :-
-	nf(Eps,ENf),
-	nf_constant(ENf,EpsN),
-	wait_linear(Term,Nf,bb_inf_internal(Is,Nf,EpsN,Inf,Vertex)).
+bb_inf(Is,Term,Inf,Vertex) :-
+	wait_linear(Term,Nf,bb_inf_internal(Is,Nf,Inf,Vertex)).
 
 % ---------------------------------------------------------------------
 
-% bb_inf_internal(Is,Lin,Eps,Inf,Vertex)
+% bb_inf_internal(Is,Lin,Inf,Vertex)
 %
 % Finds an infimum Inf for linear expression in normal form Lin, where
-% all variables in Is are to be integers. Eps denotes the margin in which
-% we accept a number as an integer (to deal with rounding errors etc.).
+% all variables in Is are to be integers.
 
-bb_inf_internal(Is,Lin,Eps,_,_) :-
-	bb_intern(Is,IsNf,Eps),
+bb_inf_internal(Is,Lin,_,_) :-
+	bb_intern(Is,IsNf),
 	nb_delete(prov_opt),
 	repair(Lin,LinR),	% bb_narrow ...
 	deref(LinR,Lind),
 	var_with_def_assign(Dep,Lind),
 	determine_active_dec(Lind),
-	bb_loop(Dep,IsNf,Eps),
+	bb_loop(Dep,IsNf),
 	fail.
-bb_inf_internal(_,_,_,Inf,Vertex) :-
+bb_inf_internal(_,_,Inf,Vertex) :-
 	catch(nb_getval(prov_opt,InfVal-Vertex),_,fail),
 	{Inf =:= InfVal},
 	nb_delete(prov_opt).
 
-% bb_loop(Opt,Is,Eps)
+% bb_loop(Opt,Is)
 %
 % Minimizes the value of Opt where variables Is have to be integer values.
-% Eps denotes the rounding error that is acceptable. This predicate can be
-% backtracked to try different strategies.
+% This predicate can be backtracked to try different strategies.
 
-bb_loop(Opt,Is,Eps) :-
+bb_loop(Opt,Is) :-
 	bb_reoptimize(Opt,Inf),
 	bb_better_bound(Inf),
 	vertex_value(Is,Ivs),
-	(   bb_first_nonint(Is,Ivs,Eps,Viol,Floor,Ceiling)
+	(   bb_first_nonint(Is,Ivs,Viol,Floor,Ceiling)
 	->  bb_branch(Viol,Floor,Ceiling),
-	    bb_loop(Opt,Is,Eps)
+	    bb_loop(Opt,Is)
 	;   round_values(Ivs,RoundVertex),
 	    nb_setval(prov_opt,Inf-RoundVertex) % new provisional optimum
 	).
@@ -165,21 +162,19 @@ rhs_value(Xn,Value) :-
 	    Value is R+I
 	).
 
-% bb_first_nonint(Ints,Rhss,Eps,Viol,Floor,Ceiling)
+% bb_first_nonint(Ints,Rhss,Viol,Floor,Ceiling)
 %
 % Finds the first variable in Ints which doesn't have an active integer bound.
 % Rhss contain the Rhs (R + I) values corresponding to the variables.
 % The first variable that hasn't got an active integer bound, is returned in
 % Viol. The floor and ceiling of its actual bound is returned in Floor and Ceiling.
 
-bb_first_nonint([I|Is],[Rhs|Rhss],Eps,Viol,F,C) :-
-	(   Floor is floor(Rhs+1.0e-10),
-	    Ceiling is ceiling(Rhs-1.0e-10),
-	    Eps - min(Rhs-Floor,Ceiling-Rhs) < -1.0e-10
-	->  Viol = I,
-	    F = Floor,
-	    C = Ceiling
-	;   bb_first_nonint(Is,Rhss,Eps,Viol,F,C)
+bb_first_nonint([I|Is],[Rhs|Rhss],Viol,F,C) :-
+	(   compare_d(=, Rhs, integer(Rhs))
+	->  bb_first_nonint(Is,Rhss,Viol,F,C)
+        ;   Viol = I,
+	    F is floor(Rhs),
+	    C is ceiling(Rhs)
 	).
 
 % round_values([X|Xs],[Xr|Xrs])
@@ -191,41 +186,39 @@ round_values([X|Xs],[Y|Ys]) :-
 	Y is round(X),
 	round_values(Xs,Ys).
 
-% bb_intern([X|Xs],[Xi|Xis],Eps)
+% bb_intern([X|Xs],[Xi|Xis])
 %
 % Turns the elements of the first list into integers into the second
-% list via bb_intern/4.
+% list via bb_intern/3.
 
-bb_intern([],[],_).
-bb_intern([X|Xs],[Xi|Xis],Eps) :-
+bb_intern([],[]).
+bb_intern([X|Xs],[Xi|Xis]) :-
 	nf(X,Xnf),
-	bb_intern(Xnf,Xi,X,Eps),
-	bb_intern(Xs,Xis,Eps).
+	bb_intern(Xnf,Xi,X),
+	bb_intern(Xs,Xis).
 
 
-% bb_intern(Nf,X,Term,Eps)
+% bb_intern(Nf,X,Term)
 %
 % Makes sure that Term which is normalized into Nf, is integer.
 % X contains the possibly changed Term. If Term is a variable,
 % then its bounds are hightened or lowered to the next integer.
 % Otherwise, it is checked it Term is integer.
 
-bb_intern([],X,_,_) :-
+bb_intern([],X,_) :-
 	!,
-	X = 0.0.
-bb_intern([v(I,[])],X,_,Eps) :-
+	X = 0.
+bb_intern([v(I,[])],X,_) :-
 	!,
 	X = I,
-	min(I-floor(I+1e-010),ceiling(I-1e-010)-I) - Eps < 1e-010.
-bb_intern([v(One,[V^1])],X,_,_) :-
-	Test is One - 1.0,
-	Test =< 1e-010,
-	Test >= -1e-010,
+        compare_d(clpn, =, I, integer(I)).
+bb_intern([v(One,[V^1])],X,_) :-
+        compare_d(clpn, =, One, 1),
 	!,
 	V = X,
 	bb_narrow_lower(X),
 	bb_narrow_upper(X).
-bb_intern(_,_,Term,_) :-
+bb_intern(_,_,Term) :-
 	throw(instantiation_error(bb_inf(Term,_,_),1)).
 
 % bb_narrow_lower(X)
@@ -237,7 +230,8 @@ bb_intern(_,_,Term,_) :-
 
 bb_narrow_lower(X) :-
 	(   inf(X,Inf)
-	->  Bound is ceiling(Inf-1.0e-10),
+	->  epsilon(abs(Inf), E),
+            Bound is ceiling(Inf-E),
 	    (   entailed(X > Bound)
 	    ->  {X >= Bound+1}
 	    ;   {X >= Bound}
@@ -251,7 +245,8 @@ bb_narrow_lower(X) :-
 
 bb_narrow_upper(X) :-
 	(   sup(X,Sup)
-	->  Bound is floor(Sup+1.0e-10),
+	->  epsilon(abs(Sup), E),
+            Bound is floor(Sup+E),
 	    (   entailed(X < Bound)
 	    ->  {X =< Bound-1}
 	    ;   {X =< Bound}
@@ -265,5 +260,5 @@ bb_narrow_upper(X) :-
 :- multifile
 	sandbox:safe_primitive/1.
 
-sandbox:safe_primitive(bb_r:bb_inf(_,_,_)).
-sandbox:safe_primitive(bb_r:bb_inf(_,_,_,_,_)).
+sandbox:safe_primitive(bb_n:bb_inf(_,_,_)).
+sandbox:safe_primitive(bb_n:bb_inf(_,_,_,_)).

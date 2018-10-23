@@ -39,11 +39,11 @@
 */
 
 
-:- module(fourmotz_r,
+:- module(fourmotz_n,
 	[
 	    fm_elim/3
 	]).
-:- use_module(bv_r,
+:- use_module(bv_n,
 	[
 	    allvars/2,
 	    basis_add/2,
@@ -51,21 +51,21 @@
 	    pivot/5,	
 	    var_with_def_intern/4
 	]).
-:- use_module('../clpqr/class',
+:- use_module(library(clpcd/class),
 	[
 	    class_allvars/2
 	]).
-:- use_module('../clpqr/project',
+:- use_module(library(clpcd/project),
 	[
 	    drop_dep/1,
 	    drop_dep_one/1,
 	    make_target_indep/2
 	]).
-:- use_module('../clpqr/redund',
+:- use_module(library(clpcd/redund),
 	[
 	    redundancy_vars/1
 	]).
-:- use_module(store_r,
+:- use_module(store_n,
 	[
 	    add_linear_11/3,
 	    add_linear_f1/4,
@@ -73,8 +73,12 @@
 	    nf_coeff_of/3,
 	    normalize_scalar/2
 	]).
-		
 
+:- multifile
+        project:fm_elim/4.
+
+project:fm_elim(clpn,Avs,Tvs,Pivots) :-
+    fm_elim(Avs,Tvs,Pivots).
 
 fm_elim(Vs,Target,Pivots) :-
 	prefilter(Vs,Vsf),
@@ -89,8 +93,9 @@ prefilter([],[]).
 prefilter([V|Vs],Res) :-
 	(   get_attr(V,itf,Att),
 	    arg(9,Att,n),
-	    occurs(V) % V is a nontarget variable that occurs in a bounded linear equation
-	->  Res = [V|Tail],
+	    occurs(V)
+	->  % V is a nontarget variable that occurs in a bounded linear equation
+	    Res = [V|Tail],
 	    setarg(10,Att,keep_indep),
 	    prefilter(Vs,Tail)
 	;   prefilter(Vs,Res)
@@ -221,7 +226,7 @@ fm_detach([V:_|Vs]) :-
 
 activate_crossproduct([]).
 activate_crossproduct([lez(Strict,Lin)|News]) :-
-	var_with_def_intern(t_u(0.0),Var,Lin,Strict),
+	var_with_def_intern(t_u(0),Var,Lin,Strict),
 	% Var belongs to same class as elements in Lin
 	basis_add(Var,_),
 	activate_crossproduct(News).
@@ -265,7 +270,7 @@ crossproduct([B:Kb|Bs],A:Ka) -->
 	    K is -Kb/Ka,
 	    add_linear_f1(LinA,K,LinB,Lin)	% Lin doesn't contain the target variable anymore
 	},
-	(   { K > 1.0e-10 } % K > 0: signs were opposite
+	(   { K > 0 }	% K > 0: signs were opposite
 	->  { Strict is Sa \/ Sb },
 	    cross_lower(Ta,Tb,K,Lin,Strict),
 	    cross_upper(Ta,Tb,K,Lin,Strict)
@@ -301,8 +306,8 @@ cross_lower(Ta,Tb,K,Lin,Strict) -->
 	    !,
 	    L is K*La+Lb,
 	    normalize_scalar(L,Ln),
-	    add_linear_f1(Lin,-1.0,Ln,Lhs),
-	    Sl is Strict >> 1 % normalize to upper bound
+	    add_linear_f1(Lin,-1,Ln,Lhs),
+	    Sl is Strict >> 1			% normalize to upper bound
 	},
 	[ lez(Sl,Lhs) ].
 cross_lower(_,_,_,_,_) --> [].
@@ -321,7 +326,7 @@ cross_upper(Ta,Tb,K,Lin,Strict) -->
 	    U is -(K*Ua+Ub),
 	    normalize_scalar(U,Un),
 	    add_linear_11(Un,Lin,Lhs),
-	    Su is Strict /\ 1 % normalize to upper bound
+	    Su is Strict /\ 1			% normalize to upper bound
 	},
 	[ lez(Su,Lhs) ].
 cross_upper(_,_,_,_,_) --> [].
@@ -393,8 +398,7 @@ cp_card([B:Kb|Bs],A:Ka,Ci,Co) :-
 	arg(2,AttA,type(Ta)),
 	get_attr(B,itf,AttB),
 	arg(2,AttB,type(Tb)),
-	K is -Kb/Ka,
-	(   K > 1.0e-10 % K > 0: signs were opposite
+	(   sign(Ka) =\= sign(Kb)
 	->  cp_card_lower(Ta,Tb,Ci,Cii),
 	    cp_card_upper(Ta,Tb,Cii,Ciii)
 	;   flip(Ta,Taf),

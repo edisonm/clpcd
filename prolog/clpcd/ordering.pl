@@ -102,14 +102,14 @@ arrangement(Class,Arr) :-
 	!.
 arrangement(_,_) :- throw(unsatisfiable_ordering).
 
+:- multifile
+        var_intern/3.
+
 join_class([],_).
 join_class([X|Xs],Class) :-
 	(   var(X)
 	->  clp_type(X,CLP),
-	    (   CLP = clpr
-	    ->  bv_r:var_intern(X,Class)
-	    ;   bv_q:var_intern(X,Class)
-	    )
+            var_intern(CLP, X, Class)
 	;   true
 	),
 	join_class(Xs,Class).

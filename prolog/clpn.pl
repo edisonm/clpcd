@@ -40,24 +40,24 @@
 
 
 
-:- module(clpr,
+:- module(clpn,
 	[
 	    {}/1,
 	    maximize/1,
 	    minimize/1,
 	    inf/2, inf/4, sup/2, sup/4,
 	    bb_inf/3,
-	    bb_inf/5,
+	    bb_inf/4,
 	    ordering/1,
 	    entailed/1,
 	    clp_type/2,
 	    dump/3%, projecting_assert/1
 	]).
-:- license(gpl_swipl, 'CLP(R)').
+:- license(gpl_swipl, 'CLP(N)').
 :- expects_dialect(swi).
 
 %
-% Don't report export of private predicates from clpr
+% Don't report export of private predicates from clpn
 %
 :- multifile
 	user:portray_message/2.
@@ -65,24 +65,25 @@
 :- dynamic
 	user:portray_message/2.
 %
-user:portray_message(warning,import(_,_,clpr,private)).
+user:portray_message(warning,import(_,_,clpn,private)).
 
 :- load_files(
 	[
-	    'clpr/bb_r',
-	    'clpr/bv_r',
-	    'clpr/fourmotz_r',
-	    'clpr/ineq_r',
-	    'clpr/itf_r',
-	    'clpr/nf_r',
-	    'clpr/store_r',
-	    'clpqr/class',
-	    'clpqr/dump',
-	    'clpqr/geler',
-	    'clpqr/itf',
-	    'clpqr/ordering',
-	    'clpqr/project',
-	    'clpqr/redund',
+            clpn/itf, % Fix coming libraries
+	    'clpn/bb_n',
+	    'clpn/bv_n',
+	    'clpn/fourmotz_n',
+	    'clpn/ineq_n',
+	    'clpn/itf_n',
+	    'clpn/nf_n',
+	    'clpn/store_n',
+	    library(clpcd/class),
+	    library(clpcd/dump),
+	    library(clpcd/geler),
+	    library(clpcd/itf),
+	    library(clpcd/ordering),
+	    library(clpcd/project),
+	    library(clpcd/redund),
 	    library(ugraphs)
 	],
 	[

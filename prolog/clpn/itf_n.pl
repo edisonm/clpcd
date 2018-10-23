@@ -38,31 +38,38 @@
     the GNU General Public License.
 */
 
-:- module(itf_r,
+:- module(itf_n,
 	[
 	    do_checks/8
 	]).
-:- use_module(bv_r,
+:- use_module(bv_n,
 	[
 	    deref/2,
 	    detach_bounds_vlv/5,
 	    solve/1,
 	    solve_ord_x/3
 	]).
-:- use_module(nf_r,
+:- use_module(nf_n,
 	[
 	    nf/2
 	]).
-:- use_module(store_r,
+:- use_module(store_n,
 	[
 	    add_linear_11/3,
 	    indep/2,
 	    nf_coeff_of/3
 	]).
-:- use_module('../clpqr/class',
+:- use_module(library(clpcd/class),
 	[
 	    class_drop/2
 	]).
+:- use_module(spec_n).
+
+:- multifile
+        itf:do_checks/9.
+
+do_checks(clpn,Y,Ty,St,Li,Or,Cl,No,Later) :-
+	do_checks(Y,Ty,St,Li,Or,Cl,No,Later).
 
 do_checks(Y,Ty,St,Li,Or,Cl,No,Later) :-
 	numbers_only(Y),
@@ -75,6 +82,7 @@ numbers_only(Y) :-
 	(   var(Y)
 	;   integer(Y)
 	;   float(Y)
+        ;   rational(Y)
 	;   throw(type_error(_X = Y,2,'a real number',Y))
 	),
 	!.
@@ -88,12 +96,9 @@ verify_nonzero(nonzero,Y) :-
 	(   var(Y)
 	->  (   get_attr(Y,itf,Att)
 	    ->  setarg(8,Att,nonzero)
-	    ;   put_attr(Y,itf,t(clpr,n,n,n,n,n,n,nonzero,n,n,n))
+	    ;   put_attr(Y,itf,t(clpn,n,n,n,n,n,n,nonzero,n,n,n))
 	    )
-	;   (   Y < -1.0e-10
-	    ->	true
-	    ;	Y > 1.0e-10
-	    )
+	;   Y =\= 0
 	).
 verify_nonzero(n,_). % X is not nonzero
 
@@ -146,14 +151,14 @@ verify_type_nonvar(t_lU(L,U),Value,S) :-
 ilb(S,L,V) :-
 	S /\ 2 =:= 0,
 	!,
-	L - V < 1.0e-10. % non-strict
-ilb(_,L,V) :- L - V < -1.0e-10. % strict
+	compare_d(clpn, =<, L, V). % non-strict
+ilb(_,L,V) :- compare_d(clpn, =<, L, V). % strict
 
 iub(S,U,V) :-
 	S /\ 1 =:= 0,
 	!,
-	V - U < 1.0e-10. % non-strict
-iub(_,U,V) :- V - U < -1.0e-10. % strict
+	compare_d(clpn, =<, V, U). % non-strict
+iub(_,U,V) :- compare_d(clpn, <, V, U). % strict
 
 %
 % Running some goals after X=Y simplifies the coding. It should be possible
@@ -187,14 +192,14 @@ verify_type_var(t_lU(L,U),Y,S) -->
 llb(S,L,V) -->
 	{S /\ 2 =:= 0},
 	!,
-	[clpr:{L =< V}].
-llb(_,L,V) --> [clpr:{L < V}].
+	[clpn:{L =< V}].
+llb(_,L,V) --> [clpn:{L < V}].
 
 lub(S,U,V) -->
 	{S /\ 1 =:= 0},
 	!,
-	[clpr:{V =< U}].
-lub(_,U,V) -->	[clpr:{V < U}].
+	[clpn:{V =< U}].
+lub(_,U,V) -->	[clpn:{V < U}].
 
 %
 % We used to drop X from the class/basis to avoid trouble with subsequent

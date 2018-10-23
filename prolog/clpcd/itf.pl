@@ -48,6 +48,9 @@
 	    clp_type/2
 	]).
 
+:- multifile
+        dump_v/5,
+        dump_nz/4.
 
 clp_type(Var,Type) :-
 	(   get_attr(Var,itf,Att)
@@ -82,9 +85,6 @@ dump_linear(V) -->
 	).
 dump_linear(_) --> [].
 
-dump_v(clpq,Type,V,I,H) --> bv_q:dump_var(Type,V,I,H).
-dump_v(clpr,Type,V,I,H) --> bv_r:dump_var(Type,V,I,H).
-
 dump_nonzero(V) -->
 	{
 	    get_attr(V,itf,Att),
@@ -96,9 +96,6 @@ dump_nonzero(V) -->
 	},
 	dump_nz(CLP,V,H,I).
 dump_nonzero(_) --> [].
-
-dump_nz(clpq,V,H,I) --> bv_q:dump_nz(V,H,I).
-dump_nz(clpr,V,H,I) --> bv_r:dump_nz(V,H,I).
 
 attr_unify_hook(t(CLP,n,n,n,n,n,n,n,_,_,_),Y) :-
 	!,
@@ -118,10 +115,8 @@ attr_unify_hook(t(CLP,Ty,St,Li,Or,Cl,_,No,_,_,_),Y) :-
 	do_checks(CLP,Y,Ty,St,Li,Or,Cl,No,Later),
 	maplist(call,Later).
 
-do_checks(clpq,Y,Ty,St,Li,Or,Cl,No,Later) :-
-	itf_q:do_checks(Y,Ty,St,Li,Or,Cl,No,Later).
-do_checks(clpr,Y,Ty,St,Li,Or,Cl,No,Later) :-
-	itf_r:do_checks(Y,Ty,St,Li,Or,Cl,No,Later).
+:- multifile
+        do_checks/9.
 
 		 /*******************************
 		 *	       SANDBOX		*

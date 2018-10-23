@@ -280,13 +280,9 @@ negate_u(3,CLP,U,X) :-
 	fail.
 negate_u(_,_,_,_).
 
-% CLP(Q,R)
-
-detach_bounds(clpq,X) :- bv_q:detach_bounds(X).
-detach_bounds(clpr,X) :- bv_r:detach_bounds(X).
-
-intro_at(clpq,A,B,C) :- bv_q:intro_at(A,B,C).
-intro_at(clpr,A,B,C) :- bv_r:intro_at(A,B,C).
+:- multifile
+        detach_bounds/2,
+        intro_at/4.
 
 % Profiling: these predicates are called during redundant and can be used
 % to count the number of redundant bounds.
