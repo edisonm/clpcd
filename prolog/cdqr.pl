@@ -10,25 +10,10 @@
 
 :- meta_predicate clpcd_domain_ops:eval_d(+,+,?).
 
-cdqr_eval_d(F, R) :-
-    arithmetic_expression_value(F, R).
-
-/*
-cdqr_eval_d(F, R) :-
-    num_arithmetic_function(F),
-    neck,
-    R is F.
-*/
-
 :- public cdqr/1.
 
 cdqr(cdq).
 cdqr(cdr).
-
-clpcd_domain_ops:eval_d(C, F, R) :-
-    cdqr(C),
-    neck,
-    cdqr_eval_d(F, R).
 
 clpcd_nf:nl_invertible(C,F) :-
     cdqr(C),

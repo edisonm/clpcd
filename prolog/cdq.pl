@@ -40,6 +40,7 @@
 :- module(cdq, []).
 
 :- license(gpl_swipl, 'CLP(CDQ)').
+:- use_module(library(arithmetic)).
 :- use_module(library(neck)).
 :- use_module(library(near_utils)).
 :- use_module(library(cdqr), []).
@@ -95,3 +96,25 @@ clpcd_domain_ops:floor_d(cdq, A, B) :- B is floor(A).
 clpcd_domain_ops:ceiling_d(cdq, A, B) :- B is ceiling(A).
 
 clpcd_domain_ops:integerp(cdq, A, A) :- integer(A).
+
+clpcd_domain_ops:eval_d(cdq, F, R) :-
+    eval(F, user, R).
+
+eval(Number, _, Result) :-
+    number(Number),
+    !,
+    Result=Number.
+eval(Term, M, Value) :-
+    clause(arithmetic:eval(Term, M, Value), Body),
+    nonvar(Term),
+    Term \= (_/_),
+    neck,
+    Body.
+eval(A / B, C, D) :-
+    eval(A, C, E),
+    eval(B, C, F),
+    ( integer(E),
+      integer(F)
+    ->D is E rdiv F
+    ; D is E / F
+    ).

@@ -87,3 +87,6 @@ clpcd_domain_ops:ceiling_d(cdr, A, B) :-
 clpcd_domain_ops:integerp(cdr, X, I) :-
     I is round(X),
     near_compare(=, X, I).
+
+clpcd_domain_ops:eval_d(cdr, F, R) :-
+    arithmetic_expression_value(F, R).
