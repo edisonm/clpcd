@@ -50,8 +50,6 @@
 
 clpcd_domain_ops:clpcd_module(cdr, cdr).
 
-:- initialization(set_clpcd(cdr)).
-
 clpcd_domain_ops:rsgn_d(Type, S, P, C) :-
     Type = cdr,
     neck,

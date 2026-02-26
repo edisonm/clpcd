@@ -88,7 +88,7 @@ projecting_assert(QClause) :-
 	strip_module(QClause, Module, Clause),  % JW: SWI-Prolog not always qualifies the term!
 	copy_term_clpcd(Clause,Copy,Constraints),
 	l2c(Constraints,Conj),			% fails for []
-        clpcd_module(Sm),
+        active_clpcd_module(Module, _, Sm),
 	!,
 	(   Copy = (H:-B)
 	->  % former rule

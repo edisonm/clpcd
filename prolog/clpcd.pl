@@ -42,8 +42,7 @@
             sup/4,
             bb_inf/3,
             bb_inf/4,
-            entailed/1,
-            set_clpcd/1
+            entailed/1
           ]).
 
 :- use_module(library(lists)).
@@ -56,47 +55,58 @@
 :- reexport(library(clpcd/dump),       [dump/3]).
 :- reexport(library(clpcd/ordering),   [clp_type/2]).
 :- reexport(library(clpcd/ordering),   [ordering/1]).
-:- reexport(library(clpcd/domain_ops), [set_clpcd/1]).
 :- init_expansors.
 
-inf(Expression, Inf) :-
-    active_clpcd(D),
+:- meta_predicate
+        inf(:,?),
+        inf(:,?,?,?),
+        sup(:,?),
+        sup(:,?,?,?),
+        maximize(:),
+        minimize(:),
+        {:},
+        entailed(:),
+        bb_inf(?,:,?),
+        bb_inf(?,:,?,?).
+
+inf(C:Expression, Inf) :-
+    active_clpcd(C, D),
     inf(D, Expression, Inf).
 
-inf(Expression, Inf, Vector, Vertex) :-
-    active_clpcd(D),
+inf(C:Expression, Inf, Vector, Vertex) :-
+    active_clpcd(C, D),
     inf(D, Expression, Inf, Vector, Vertex).
 
-sup(Expression, Sup) :-
-    active_clpcd(D),
+sup(C:Expression, Sup) :-
+    active_clpcd(C, D),
     sup(D, Expression, Sup).
 
-sup(Expression, Sup, Vector, Vertex) :-
-    active_clpcd(D),
+sup(C:Expression, Sup, Vector, Vertex) :-
+    active_clpcd(C, D),
     sup(D, Expression, Sup, Vector, Vertex).
 
-maximize(Term) :-
-    active_clpcd(D),
+maximize(C:Term) :-
+    active_clpcd(C, D),
     maximize(D, Term).
 
-minimize(Term) :-
-    active_clpcd(D),
+minimize(C:Term) :-
+    active_clpcd(C, D),
     minimize(D, Term).
 
-{Rel} :-
-    active_clpcd(D),
+{C:Rel} :-
+    active_clpcd(C, D),
     add_constraint(Rel, D).
 
-entailed(C) :-
-    active_clpcd(D),
-    entailed(D, C).
+entailed(C:E) :-
+    active_clpcd(C, D),
+    entailed(D, E).
 
-bb_inf(Is, Term, Inf) :-
-    active_clpcd(D),
+bb_inf(Is, C:Term, Inf) :-
+    active_clpcd(C, D),
     bb_inf(D, Is, Term, Inf, _).
 
-bb_inf(Is, Term, Inf, Vertex) :-
-    active_clpcd(D),
+bb_inf(Is, C:Term, Inf, Vertex) :-
+    active_clpcd(C, D),
     bb_inf(D, Is, Term, Inf, Vertex).
 
 clpcd_nf:nl_invertible(_, F) :-
