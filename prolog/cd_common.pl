@@ -39,7 +39,7 @@
 
 clpcd_domain_ops:rsgn_d(CDType, S, P, C) :-
     cd_type(CDType, Type),
-    \+ clause(clpcdd_domain_ops:rsgn_d(CDType, S, P, C), _),
+    \+ clause(clpcd_domain_ops:rsgn_d(CDType, S, P, C), _),
     necki,
     eval(Type, integer(P) mod 2, R),
     ( near_compare(Type, =, R, 0 )
